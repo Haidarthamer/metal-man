@@ -103,24 +103,35 @@ for(let i=0;i<7;i++){
  const d=new THREE.Group();d.add(new THREE.Mesh(droneGeo,droneMat));
  const ring=new THREE.Mesh(new THREE.TorusGeometry(4.2,.16,8,32),new THREE.MeshBasicMaterial({color:0x5ce7ff}));ring.rotation.x=Math.PI/2;d.add(ring);
  d.position.set((Math.random()-.5)*440,35+Math.random()*95,(Math.random()-.5)*440);
- d.userData={baseY:d.position.y,phase:Math.random()*6.28,hp:3};scene.add(d);drones.push(d);
+ d.userData={baseY:d.position.y,phase:Math.random()*6.28,scanned:false};scene.add(d);drones.push(d);
 }
-const bolts=[],boltGeo=new THREE.SphereGeometry(.34,10,8),boltMat=new THREE.MeshBasicMaterial({color:0x8df8ff}),effects=[];
+const scanEffects=[],scanGeo=new THREE.SphereGeometry(1,12,10);
+let rescueCount=0;
 function notify(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(notify.timer);notify.timer=setTimeout(()=>el.classList.remove('show'),1500);}
 let running=false,paused=false,energy=100,lastTime=performance.now();
 const input={forward:0,strafe:0,vertical:0,boost:false};
 let takeoffHeld=false;
 const player={pos:new THREE.Vector3(0,1.2,45),vel:new THREE.Vector3(),yaw:0};
-function fire(){
- if(!running||paused||energy<2)return;energy=Math.max(0,energy-2.3);
- const dir=new THREE.Vector3(0,0,-1).applyQuaternion(suit.quaternion).normalize();
- const p=new THREE.Mesh(boltGeo,boltMat);p.position.copy(player.pos).add(new THREE.Vector3(0,1.25,0)).addScaledVector(dir,2);
- p.userData={velocity:dir.multiplyScalar(215),life:2.4};scene.add(p);bolts.push(p);
- if(navigator.vibrate)navigator.vibrate(12);
-}
-function impact(position){
- const s=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),new THREE.MeshBasicMaterial({color:0x72efff,transparent:true,opacity:.8}));
- s.position.copy(position);s.userData={life:.28,max:.28};scene.add(s);effects.push(s);
+function scanArea(){
+ if(!running||paused||energy<5)return;
+ energy=Math.max(0,energy-5);
+ const direction=new THREE.Vector3(0,0,-1).applyQuaternion(suit.quaternion).normalize();
+ const origin=player.pos.clone().add(new THREE.Vector3(0,1.25,0));
+ let candidate=null,best=160;
+ for(const d of drones){
+  if(d.userData.scanned)continue;
+  const offset=d.position.clone().sub(origin),distance=offset.length();
+  if(distance<best&&direction.dot(offset.normalize())>.12){candidate=d;best=distance;}
+ }
+ if(candidate){
+  candidate.userData.scanned=true;
+  candidate.children[0].material=new THREE.MeshStandardMaterial({color:0x62ffc4,metalness:.55,roughness:.25,emissive:0x174c38,emissiveIntensity:1.4});
+  candidate.children[1].material=new THREE.MeshBasicMaterial({color:0x75ffc9});
+  rescueCount++;$('beacon-count').textContent=String(rescueCount).padStart(2,'0');
+  notify('BEACON RESTORED · '+rescueCount+'/07');
+ }else notify('SCAN COMPLETE · NO BEACON IN RANGE');
+ const wave=new THREE.Mesh(scanGeo,new THREE.MeshBasicMaterial({color:0x78efff,wireframe:true,transparent:true,opacity:.62}));
+ wave.position.copy(origin);wave.userData={life:.6,max:.6};wave.scale.setScalar(.25);scene.add(wave);scanEffects.push(wave);
 }
 function start(){
  $('boot-screen').classList.add('hidden');$('loading-screen').classList.remove('hidden');
@@ -131,10 +142,10 @@ function pause(value){paused=value;$('pause-screen').classList.toggle('hidden',!
 $('start-btn').addEventListener('click',start);$('pause-btn').addEventListener('click',()=>pause(true));$('resume-btn').addEventListener('click',()=>pause(false));
 $('restart-btn').addEventListener('click',()=>{player.pos.set(0,1.2,45);player.vel.set(0,0,0);energy=100;pause(false);});
 const keys={KeyW:['forward',1],ArrowUp:['forward',1],KeyS:['forward',-1],ArrowDown:['forward',-1],KeyA:['strafe',-1],ArrowLeft:['strafe',-1],KeyD:['strafe',1],ArrowRight:['strafe',1],Space:['vertical',1],KeyC:['vertical',-1],ShiftLeft:['boost',true],ShiftRight:['boost',true]};
-addEventListener('keydown',e=>{const v=keys[e.code];if(v){e.preventDefault();input[v[0]]=v[1];}if(e.code==='KeyF')fire();if(e.code==='Escape'&&running)pause(!paused);});
+addEventListener('keydown',e=>{const v=keys[e.code];if(v){e.preventDefault();input[v[0]]=v[1];}if(e.code==='KeyF')scanArea();if(e.code==='Escape'&&running)pause(!paused);});
 addEventListener('keyup',e=>{const v=keys[e.code];if(v){if(v[0]==='boost')input.boost=false;else if(input[v[0]]===v[1])input[v[0]]=0;}});
-$('game-canvas').addEventListener('pointerdown',()=>{if(running&&!paused&&matchMedia('(pointer:fine)').matches)fire();});
-$('fire-btn').addEventListener('pointerdown',e=>{e.preventDefault();fire();});
+$('game-canvas').addEventListener('pointerdown',()=>{if(running&&!paused&&matchMedia('(pointer:fine)').matches)scanArea();});
+$('scan-btn').addEventListener('pointerdown',e=>{e.preventDefault();scanArea();});
 $('boost-btn').addEventListener('pointerdown',e=>{e.preventDefault();input.boost=true;});
 for(const ev of ['pointerup','pointercancel','pointerleave'])$('boost-btn').addEventListener(ev,()=>input.boost=false);
 $('takeoff-btn').addEventListener('pointerdown',e=>{e.preventDefault();if(player.pos.y<8){input.vertical=1;takeoffHeld=true;}else notify('LOWER ALTITUDE TO LAND');});
@@ -184,12 +195,12 @@ function updateCamera(dt){
 }
 function updateEffects(dt,now){
  for(const d of drones)if(d.visible)d.position.y=d.userData.baseY+Math.sin(now*.0014+d.userData.phase)*4;
- for(let i=bolts.length-1;i>=0;i--){
-  const p=bolts[i];p.position.addScaledVector(p.userData.velocity,dt);p.userData.life-=dt;let hit=false;
-  for(const d of drones)if(d.userData.hp>0&&p.position.distanceTo(d.position)<5.5){d.userData.hp--;impact(d.position);if(d.userData.hp<=0){d.visible=false;notify('TARGET DISABLED');}hit=true;break;}
-  if(hit||p.userData.life<=0){scene.remove(p);bolts.splice(i,1);}
+ for(let i=scanEffects.length-1;i>=0;i--){
+  const s=scanEffects[i];s.userData.life-=dt;
+  const progress=1-s.userData.life/s.userData.max;s.scale.setScalar(.25+progress*72);
+  s.material.opacity=Math.max(0,s.userData.life/s.userData.max)*.62;
+  if(s.userData.life<=0){scene.remove(s);scanEffects.splice(i,1);}
  }
- for(let i=effects.length-1;i>=0;i--){const s=effects[i];s.userData.life-=dt;s.scale.multiplyScalar(1+dt*5);s.material.opacity=Math.max(0,s.userData.life/s.userData.max);if(s.userData.life<=0){scene.remove(s);effects.splice(i,1);}}
 }
 function animate(now){
  requestAnimationFrame(animate);const dt=Math.min((now-lastTime)/1000,.04);lastTime=now;
