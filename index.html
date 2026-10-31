@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#080d16"><meta name="description" content="IRON MAN: NEW YORK — 3D flight and repulsor prototype.">
+<title>IRON MAN: NEW YORK</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+<div id="game-root">
+<canvas id="game-canvas" aria-label="3D game view"></canvas>
+<div id="boot-screen" class="screen-layer">
+  <div class="boot-mark"><span class="arc arc-one"></span><span class="arc arc-two"></span><span class="arc-core"></span></div>
+  <div class="boot-kicker">STARK INDUSTRIES // FLIGHT SYSTEMS</div>
+  <h1>IRON MAN<span>: NEW YORK</span></h1>
+  <p class="boot-copy">A prototype flight test. The city is waiting.</p>
+  <button id="start-btn" class="primary-btn">INITIALIZE SUIT <span>↗</span></button>
+  <div class="boot-foot"><span>MARK VII TEST BUILD</span><span>v0.1.0</span></div>
+</div>
+<div id="loading-screen" class="screen-layer hidden"><div class="loader-ring"></div><div class="boot-kicker">BOOTING ARC REACTOR</div><div id="loading-text">Preparing flight systems…</div></div>
+<div id="hud" class="hud hidden">
+  <div class="hud-top">
+    <div class="brand-lockup"><div class="brand-dot"></div><div><strong>STARK</strong><small>FLIGHT SYSTEMS</small></div></div>
+    <div class="telemetry"><span class="live-dot"></span> SYSTEM ONLINE <span class="telemetry-divider">/</span> NEW YORK</div>
+    <button id="pause-btn" class="icon-btn" aria-label="Pause">Ⅱ</button>
+  </div>
+  <div class="left-readout"><div class="readout-label">ALTITUDE <span>AGL</span></div><div class="readout-value"><span id="altitude-value">000</span><small>m</small></div><div class="readout-rule"></div><div class="readout-label">VELOCITY</div><div class="readout-value"><span id="speed-value">000</span><small>km/h</small></div></div>
+  <div class="right-readout"><div class="readout-label">ARC REACTOR</div><div class="energy-number"><span id="energy-value">100</span><small>%</small></div><div class="energy-track"><div id="energy-fill"></div></div><div class="readout-state"><span class="live-dot"></span><span id="flight-state">GROUND MODE</span></div></div>
+  <div class="reticle"><span></span><i></i></div><div id="toast" class="toast">FLIGHT SYSTEM READY</div>
+  <div class="bottom-hud"><div class="weapon-tag"><span class="weapon-icon">◎</span><div><small>WEAPON</small><strong>REPULSOR</strong></div></div><div class="center-hint" id="desktop-hint">WASD MOVE <b>·</b> SPACE ASCEND <b>·</b> SHIFT BOOST <b>·</b> CLICK FIRE</div><div class="suit-tag"><small>ARMOR</small><strong>MARK VII <span>●</span></strong></div></div>
+  <div class="mobile-controls" id="mobile-controls">
+    <div class="move-pad" id="move-pad"><div class="pad-ring"><div id="move-stick" class="pad-stick"></div></div><small>MOVE</small></div>
+    <div class="vertical-pad" id="vertical-pad"><button data-action="up" aria-label="Ascend">＋</button><button data-action="down" aria-label="Descend">−</button><small>ALTITUDE</small></div>
+    <div class="action-pad"><button id="fire-btn" class="action-button fire-button"><span>◎</span><small>FIRE</small></button><button id="boost-btn" class="action-button boost-button"><span>»</span><small>BOOST</small></button><button id="takeoff-btn" class="action-button takeoff-button"><span>↑</span><small>TAKE OFF</small></button></div>
+  </div>
+</div>
+<div id="pause-screen" class="screen-layer hidden"><div class="pause-card"><div class="boot-kicker">FLIGHT CONTROL</div><h2>SIMULATION PAUSED</h2><p>Your suit is standing by.</p><button id="resume-btn" class="primary-btn">RESUME FLIGHT <span>↗</span></button><button id="restart-btn" class="secondary-btn">RESTART TEST</button></div></div>
+<div id="error-banner" class="error-banner hidden"></div>
+</div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
