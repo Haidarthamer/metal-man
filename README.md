@@ -1,6 +1,6 @@
 # IRON MAN: NEW YORK
 
-A mobile-friendly Three.js flight-combat prototype. Includes a procedural Manhattan-style blockout, fallback suit, arcade-style flight, boost, repulsor projectiles and flying target drones. The supplied OBJ assets are supported and load automatically from the `assets/` folders.
+A mobile-friendly Three.js flight prototype. Includes a procedural Manhattan-style blockout, a fallback suit, arcade-style flight, boost, a beacon-scanning activity and rescue drones. Optimized OBJ assets are loaded from gzip files in the `assets/` folders.
 
 ## Controls
 - Desktop: WASD move, Space ascend, C descend, Shift boost, F or mouse click fire, Esc pause.
@@ -10,7 +10,7 @@ A mobile-friendly Three.js flight-combat prototype. Includes a procedural Manhat
 Serve this folder over HTTP (ES modules do not work reliably from `file://`), for example: `python -m http.server 8000`.
 
 ## Assets
-Place the Iron Man OBJ, MTL and texture PNGs in `assets/armor/`. Place `ny_clean_up2.obj`, `tex.jpg`, and the provided `ny_clean_up2.mtl` in `assets/city/`.
+The optimized archive contains `hero_ironman01.obj.gz` plus its MTL/PNG textures in `assets/armor/`, and `ny_clean_up2.obj.gz`, `tex.jpg`, and `ny_clean_up2.mtl` in `assets/city/`. The OBJ files are gzip-compressed to reduce mobile download size; the game decompresses them in the browser.
 
 The supplied armor OBJ has no skeleton/rig, so this prototype displays it as a single animated mesh. Articulated flight poses require a rigged model or a later rigging pass.
 
