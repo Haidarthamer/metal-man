@@ -109,6 +109,7 @@ const bolts=[],boltGeo=new THREE.SphereGeometry(.34,10,8),boltMat=new THREE.Mesh
 function notify(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(notify.timer);notify.timer=setTimeout(()=>el.classList.remove('show'),1500);}
 let running=false,paused=false,energy=100,lastTime=performance.now();
 const input={forward:0,strafe:0,vertical:0,boost:false};
+let takeoffHeld=false;
 const player={pos:new THREE.Vector3(0,1.2,45),vel:new THREE.Vector3(),yaw:0};
 function fire(){
  if(!running||paused||energy<2)return;energy=Math.max(0,energy-2.3);
@@ -136,7 +137,8 @@ $('game-canvas').addEventListener('pointerdown',()=>{if(running&&!paused&&matchM
 $('fire-btn').addEventListener('pointerdown',e=>{e.preventDefault();fire();});
 $('boost-btn').addEventListener('pointerdown',e=>{e.preventDefault();input.boost=true;});
 for(const ev of ['pointerup','pointercancel','pointerleave'])$('boost-btn').addEventListener(ev,()=>input.boost=false);
-$('takeoff-btn').addEventListener('pointerdown',e=>{e.preventDefault();input.vertical=player.pos.y<8?1:0;if(player.pos.y>=8)notify('LOWER ALTITUDE TO LAND');});
+$('takeoff-btn').addEventListener('pointerdown',e=>{e.preventDefault();if(player.pos.y<8){input.vertical=1;takeoffHeld=true;}else notify('LOWER ALTITUDE TO LAND');});
+for(const ev of ['pointerup','pointercancel','pointerleave'])$('takeoff-btn').addEventListener(ev,()=>{if(takeoffHeld){input.vertical=0;takeoffHeld=false;}});
 $('vertical-pad').querySelectorAll('button').forEach(b=>{
  const value=b.dataset.action==='up'?1:-1;
  b.addEventListener('pointerdown',e=>{e.preventDefault();input.vertical=value;});
