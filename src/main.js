@@ -72,11 +72,19 @@ function createFallbackSuit(){
  return body;
 }
 const fallback=createFallbackSuit();suit.add(fallback);suit.position.set(0,1,0);
+async function loadCompressedOBJ(path,loader){
+ const response=await fetch(path);
+ if(!response.ok)throw new Error('Model file not found: '+path);
+ if(!('DecompressionStream' in window))throw new Error('This browser cannot decompress the optimized model.');
+ const stream=response.body.pipeThrough(new DecompressionStream('gzip'));
+ const objText=await new Response(stream).text();
+ return loader.parse(objText);
+}
 async function loadArmor(){
  try{
   const mats=await new Promise((ok,no)=>new MTLLoader().load('./assets/armor/hero_ironman01.mtl',ok,undefined,no));mats.preload();
   const loader=new OBJLoader();loader.setMaterials(mats);
-  const obj=await new Promise((ok,no)=>loader.load('./assets/armor/hero_ironman01.obj',ok,undefined,no));
+  const obj=await loadCompressedOBJ('./assets/armor/hero_ironman01.obj.gz',loader);
   const bounds=new THREE.Box3().setFromObject(obj),size=bounds.getSize(new THREE.Vector3());
   const center=bounds.getCenter(new THREE.Vector3()),scale=2.35/Math.max(size.y,.001);
   obj.scale.setScalar(scale);obj.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);
@@ -88,7 +96,7 @@ async function loadCityAsset(){
  try{
   const mats=await new Promise((ok,no)=>new MTLLoader().load('./assets/city/ny_clean_up2.mtl',ok,undefined,no));mats.preload();
   const loader=new OBJLoader();loader.setMaterials(mats);
-  const obj=await new Promise((ok,no)=>loader.load('./assets/city/ny_clean_up2.obj',ok,undefined,no));
+  const obj=await loadCompressedOBJ('./assets/city/ny_clean_up2.obj.gz',loader);
   const bounds=new THREE.Box3().setFromObject(obj),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
   const scale=145/Math.max(size.x,size.z);obj.scale.setScalar(scale);
   obj.position.set(-center.x*scale,-bounds.min.y*scale+.15,-center.z*scale);
